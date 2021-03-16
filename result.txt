@@ -1,0 +1,17 @@
+
+https://market.kz/nedvizhimost/?page=2&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=4&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=5&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=1&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=2&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=4&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=5&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=3&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=1&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=2&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=4&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=5&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=1&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=5&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=1&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=1&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
