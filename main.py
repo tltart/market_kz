@@ -228,6 +228,8 @@ if __name__ == '__main__':
                 procs.append(proc)
                 proc.start()
 
+                proc.join()
+
 
 
 
