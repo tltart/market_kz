@@ -8,6 +8,9 @@ import pandas as pd
 import time
 from multiprocessing import Process
 
+
+from parse_proxy import Parse_proxy
+
 class P():
     def __init__(self):
         self.proxy = None
@@ -20,6 +23,7 @@ class P():
         self.href_list = []
         self.href = None
         self.z = 0
+        self.false_parse = 0
         self.read_page()
 
     def read_page(self):
@@ -56,7 +60,7 @@ class P():
 
     def write_csv(self, object, name, city, phone, price):
         self.df.loc[0] = [object, name, city, phone, price]
-        self.df.to_csv('data.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
+        self.df.to_csv('data_2.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
 
     def get_url(self):
         try:
@@ -88,18 +92,19 @@ class P():
                 print(len(self.href_list))
 
             except Exception as e:
-                app_url_false = open("result.txt", "a")
-                app_url_false.write(self.href + "\n")
+                # app_url_false = open("result.txt", "a")
+                # app_url_false.write(self.href + "\n")
                 # app_url_false.close()
                 # self.close_driver()
                 # print(e)
+                pass
 
         except Exception as e:
             # Добавление пропущенных URL
             # self.close_driver()
-            app_url_false = open("result.txt", "a", encoding='cp1251')
-            app_url_false.write(self.url + "\n")
-            app_url_false.close()
+            # app_url_false = open("result.txt", "a", encoding='cp1251')
+            # app_url_false.write(self.url + "\n")
+            # app_url_false.close()
             print("Не взял ссылку")
             # self.run()
 
@@ -125,10 +130,10 @@ class P():
                 phone = self.driver.find_element_by_xpath('//*[@id="content"]/div[2]/div[2]/div[1]/div[2]/div/div[4]/div[1]/div[2]/dl/dd/div/span[1]').text
 
                 self.write_csv(object, name, city, phone, price)
-                print(f'Объект: {object}')
-                print(f'Продавец: {name}')
-                print(f'Стоимость : {price}')
-                print(f'Город: {city}')
+                # print(f'Объект: {object}')
+                # print(f'Продавец: {name}')
+                # print(f'Стоимость : {price}')
+                # print(f'Город: {city}')
                 print(f'Телефон: {phone}')
                 time.sleep(1)
 
@@ -136,9 +141,14 @@ class P():
 
             except Exception as e:
                 print(e)
+                self.false_parse += 1
                 self.href_list.append(self.href)
 
-
+        if self.z == 0 and self.false_parse > 20:
+            self.close_driver()
+            time.sleep(3)
+            parse_new_proxy = Parse_proxy()
+            parse_new_proxy.run_parse_proxy()
         if self.z == 0:
             self.close_driver()
             time.sleep(3)
@@ -146,6 +156,7 @@ class P():
             self.get_data_from_page()
         print("Закончили...")
         self.z = 0
+        self.read_page()
         self.write_page()
         self.new_page_parse()
 
@@ -166,21 +177,33 @@ class P():
         self.driver.close()
         self.driver.quit()
 
-
+def run_proc():
+    while pp.read_page() < 3000:
+        if len(procs) < 15:
+            tt = 15 - int(len(procs))
+            for _ in range(tt):
+                proc = Process(target=P().run, args=())
+                procs.append(proc)
+                proc.start()
+            for proc in procs:
+                proc.join()
 if __name__ == '__main__':
-    # pp = P()
-    # pp.run()
-    # def runner():
-    #     for i in range(5):
-    #         P().run()
-
+    pp = P()
 
     procs = []
-    for _ in range(5):
+
+    # def run_proc():
+    for _ in range(21):
         proc = Process(target=P().run, args=())
         procs.append(proc)
         proc.start()
 
     for proc in procs:
         proc.join()
+
+
+
+
+
+
 
