@@ -177,23 +177,20 @@ class P():
         self.driver.close()
         self.driver.quit()
 
-def run_proc():
-    while pp.read_page() < 3000:
-        if len(procs) < 15:
-            tt = 15 - int(len(procs))
-            for _ in range(tt):
-                proc = Process(target=P().run, args=())
-                procs.append(proc)
-                proc.start()
-            for proc in procs:
-                proc.join()
-if __name__ == '__main__':
-    pp = P()
+# def run_proc():
+#     while pp.read_page() < 3000:
+#         if len(procs) < 15:
+#             tt = 15 - int(len(procs))
+#             for _ in range(tt):
+#                 proc = Process(target=P().run, args=())
+#                 procs.append(proc)
+#                 proc.start()
+#             for proc in procs:
+#                 proc.join()
 
-    procs = []
 
-    # def run_proc():
-    for _ in range(21):
+def run_pr():
+    for _ in range(15):
         proc = Process(target=P().run, args=())
         procs.append(proc)
         proc.start()
@@ -201,6 +198,35 @@ if __name__ == '__main__':
     for proc in procs:
         proc.join()
 
+    while pp.read_page() < 3000:
+        for proc in procs:
+            if proc.is_alive():
+                pass
+            else:
+                proc = Process(target=P().run, args=())
+                procs.append(proc)
+                proc.start()
+
+if __name__ == '__main__':
+    pp = P()
+
+    procs = []
+    for _ in range(15):
+        proc = Process(target=P().run, args=())
+        procs.append(proc)
+        proc.start()
+
+    for proc in procs:
+        proc.join()
+
+    while pp.read_page() < 3000:
+        for proc in procs:
+            if proc.is_alive():
+                pass
+            else:
+                proc = Process(target=P().run, args=())
+                procs.append(proc)
+                proc.start()
 
 
 
