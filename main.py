@@ -9,7 +9,7 @@ import time
 from multiprocessing import Process
 
 
-from parse_proxy import Parse_proxy
+from market_kz.parse_proxy import Parse_proxy
 
 class P():
     def __init__(self):
@@ -60,7 +60,7 @@ class P():
 
     def write_csv(self, object, name, city, phone, price):
         self.df.loc[0] = [object, name, city, phone, price]
-        self.df.to_csv('data_2.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
+        self.df.to_csv('data_3.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
 
     def get_url(self):
         try:
@@ -144,8 +144,10 @@ class P():
                 self.false_parse += 1
                 self.href_list.append(self.href)
 
-        if self.z == 0 and self.false_parse > 20:
+        if self.z == 0 and self.false_parse > 50:
             self.close_driver()
+
+            # return
             time.sleep(3)
             parse_new_proxy = Parse_proxy()
             parse_new_proxy.run_parse_proxy()
@@ -216,8 +218,8 @@ if __name__ == '__main__':
         procs.append(proc)
         proc.start()
 
-    for proc in procs:
-        proc.join()
+    # for proc in procs:
+    #     proc.join()
 
     while pp.read_page() < 3000:
         for proc in procs:
@@ -228,7 +230,7 @@ if __name__ == '__main__':
                 procs.append(proc)
                 proc.start()
 
-                proc.join()
+                # proc.join()
 
 
 
