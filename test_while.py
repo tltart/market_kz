@@ -1,22 +1,27 @@
 import time
+import json
+import ast
+
+ss = ['https://market.kz/nedvizhimost/?page=1571&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000', 'https://market.kz/nedvizhimost/?page=1522&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000']
+
+def write_href_fin(text):
+    fp = open('href_fin.txt', 'a')
+    fp.write(str(text) + '\n')
+    fp.close()
+
+hh = 'https://market.kz/nedvizhimost/?page=1571&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000'
+
+def read_page():
+    sp = []
+    page_ = open("href_fin.txt", 'r').read().split('\n')
+    for i in page_:
+        z = i.replace('[', '').replace(']', '').replace('"', '').replace("'", '')
+        l = z.replace(' ', '').split(',')
+        for i in l:
+            sp.append(i)
+    print(hh in sp)
 
 
 
-def get_data_from_page():
-    false_parse = 0
-    while false_parse < 10:
-        try:
-            print(false_parse)
-            time.sleep(2)
-            raise Exception
 
-        except Exception as e:
-            if false_parse == 5:
-                print("Finish...")
-                return -1
-            print(f'Не распарсил страницу, повторяю... попытка: {false_parse}')
-            false_parse += 1
-            continue
-
-
-get_data_from_page()
+read_page()

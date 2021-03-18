@@ -11,7 +11,7 @@ import time
 from multiprocessing import Process
 
 
-from parse_proxy import Parse_proxy
+from market_kz.parse_proxy import Parse_proxy
 
 class P():
     def __init__(self):
@@ -22,7 +22,7 @@ class P():
         self.df = pd.DataFrame({'Object': [], 'Name': [], 'City': [], 'Phone': [], 'Price': [], 'href': []})
         self.capa = DesiredCapabilities.CHROME
         self.capa["pageLoadStrategy"] = "none"
-        self.z = 0
+        self.url = ''
         self.false_parse = 0
 
     def read_page(self):
@@ -52,8 +52,8 @@ class P():
         self.options.add_argument('--proxy-server=%s' % self.get_proxy())
         self.options.add_argument('--user-agent=%s' % self.get_user_agent())
         self.driver = webdriver.Chrome(desired_capabilities=self.capa, executable_path="chromedriver.exe", options=self.options)
-        self.driver.implicitly_wait(10)
-        self.wait = WebDriverWait(self.driver, 10)
+        self.driver.implicitly_wait(5)
+        self.wait = WebDriverWait(self.driver, 5)
 
     def get_proxy(self):
         self.proxy = open("proxyes.txt", 'r').read().split("\n")
@@ -68,30 +68,38 @@ class P():
     def write_csv(self, object, name, city, phone, price, href_i):
         self.df.loc[0] = [object, name, city, phone, price, href_i]
         self.df.to_csv('data_4.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
+        return
 
-    def get_url(self):
-        self.read_page()
-        self.write_page()
-        url = ''
+    def get_url(self, url):
+        self.url = url
         try:
-            url = f'https://market.kz/nedvizhimost/?page={self.page}&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000'
-            self.new_driver()
-            self.driver.get(url)
-            self.get_page_from_site(url)
+            if self.url != '':
+                self.new_driver()
+                self.driver.get(self.url)
+                self.get_page_from_site(self.url)
+                return self.url
+            else:
+                self.read_page()
+                self.write_page()
+                self.url = f'https://market.kz/nedvizhimost/?page={self.page}&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000'
+                self.new_driver()
+                self.driver.get(self.url)
+                self.get_page_from_site(self.url)
+                return
 
         except Exception as e:
             print("Не открылась ссылка...")
-            self.write_false_url(url)
+            self.write_false_url(self.url)
 
 
 
 
     def get_page_from_site(self, url):
-        href_list =[]
+        href_list = []
         fail_try = 0
         fail_try_href = 0
         while fail_try < 6:
-            print(url)
+            print(self.url)
             try:
                 print("Страница открылась, собираю все ссылки...")
                 self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#goods > div:nth-child(1) > div > div.a-card__description > div.a-card__header > div.a-card__header-top > div.a-card__left-half > div.a-card__title > a")))
@@ -109,23 +117,28 @@ class P():
                             self.get_data_from_page(href_list)
                             return
                         print("Ошибка сбора ссылок, запишу в fail...")
-                        self.write_false_url(url)
+                        self.write_false_url(self.url)
+                        self.driver.close()
                         return
                     except Exception as e:
                         if fail_try_href == 5:
                             print("Не смог собрать ссылки, запишу эту страницу в fail...")
-                            self.write_false_url(url)
+                            self.write_false_url(self.url)
                             return
                     fail_try_href += 1
                     print(f'Не смог собрать ссылки {fail_try_href} раз')
             except Exception as e:
                 if fail_try == 5:
                     print("Ссылки не смог взять, не дождался элемента, записываю...")
-                    self.write_false_url(url)
-                    return
+                    self.write_false_url(self.url)
+                    self.driver.close()
+
+                    return self.url
                 fail_try += 1
                 print(f'Не дождался элемента на странице {fail_try} раз')
-        return
+                continue
+        self.url = ''
+        return self.url
 
     def get_data_from_page(self, href_list):
         false_parse = 0
@@ -156,18 +169,16 @@ class P():
                 href_list.append(i)
                 continue
 
-        if len(href_list) and false_parse >= 5:
+        if len(href_list) != 0 and false_parse <= 5:
             print(f'Сделал {false_parse} попыток, закончил неудачно.')
             print(f'Записываю ссылки страниц конечных')
             self.write_href_fin(href_list)
-            false_parse = 0
             print(f'Закрываю драйвер...')
             self.close_driver()
             time.sleep(2)
             return
 
         print(f"Закончил парсить страницу")
-        false_parse = 0
         self.write_page()
         self.run()
 
@@ -177,22 +188,28 @@ class P():
 
     def run(self):
         print(f'Процесс номер: {os.getpid()} страница: {self.read_page()}')
+        num_fail_get_page = 0
         while int(self.read_page()) < 2800:
             try:
-                self.get_url()
+                if self.url != '':
+                    self.get_url(self.url)
+                else:
+                    self.get_url('')
             except Exception as e:
                 print("Перезапуск заново....")
                 continue
         print("Закончил все превсе...")
-
+        return
 if __name__ == '__main__':
     pp = P()
+    pp.run()
 
-    procs = []
-    for _ in range(2):
-        proc = Process(target=P().run, args=())
-        procs.append(proc)
-        proc.start()
+
+    # procs = []
+    # for _ in range(5):
+    #     proc = Process(target=P().run, args=())
+    #     procs.append(proc)
+    #     proc.start()
 
 
 

@@ -1,0 +1,2 @@
+['https://market.kz/nedvizhimost/?page=1571&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000', 'https://market.kz/nedvizhimost/?page=1522&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000']
+['https://market.kz/nedvizhimost/?page=1571&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000', 'https://market.kz/nedvizhimost/?page=1522&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000']
