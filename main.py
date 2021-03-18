@@ -11,7 +11,7 @@ import time
 from multiprocessing import Process
 
 
-from market_kz.parse_proxy import Parse_proxy
+from parse_proxy import Parse_proxy
 
 class P():
     def __init__(self):
@@ -101,7 +101,7 @@ class P():
         while fail_try < 6:
             print(self.url)
             try:
-                print("Страница открылась, собираю все ссылки...")
+                print("Жду открытия страницы...")
                 self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#goods > div:nth-child(1) > div > div.a-card__description > div.a-card__header > div.a-card__header-top > div.a-card__left-half > div.a-card__title > a")))
                 while fail_try_href < 6:
                     try:
@@ -119,32 +119,35 @@ class P():
                         print("Ошибка сбора ссылок, запишу в fail...")
                         self.write_false_url(self.url)
                         self.driver.close()
-                        return
+                        return self.url
                     except Exception as e:
                         if fail_try_href == 5:
                             print("Не смог собрать ссылки, запишу эту страницу в fail...")
                             self.write_false_url(self.url)
-                            return
+                            return self.url
+                        pass
                     fail_try_href += 1
                     print(f'Не смог собрать ссылки {fail_try_href} раз')
+                return
             except Exception as e:
                 if fail_try == 5:
-                    print("Ссылки не смог взять, не дождался элемента, записываю...")
+                    print("Страница на загрузилась, записываю в файл адрес страницы...")
                     self.write_false_url(self.url)
                     self.driver.close()
-
                     return self.url
+
                 fail_try += 1
-                print(f'Не дождался элемента на странице {fail_try} раз')
+                print(f'Не дождался открытия страницы {fail_try} раз...')
                 continue
         self.url = ''
         return self.url
 
     def get_data_from_page(self, href_list):
         false_parse = 0
-        while len(href_list) and false_parse < 5:
-            print("Первая ссылка пошла....")
+        while len(href_list) and false_parse < 6:
             i = href_list.pop(0)
+            print(f'Открываю ссылку: {i}')
+            print(f'Длина списка ссылок: {len(href_list)}')
             self.driver.get(i)
             try:
                 self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#content > div.container.flex > div.show-block-right > div.offer__sidebar-wr.hot-right-container > div.offer__sidebar-sticky > div > div.advert-contacts > div.advert-phones > button > p > span:nth-child(2)')))
@@ -169,9 +172,9 @@ class P():
                 href_list.append(i)
                 continue
 
-        if len(href_list) != 0 and false_parse <= 5:
+        if len(href_list) != 0 and false_parse == 5:
             print(f'Сделал {false_parse} попыток, закончил неудачно.')
-            print(f'Записываю ссылки страниц конечных')
+            print(f'Записываю ссылки страниц для парсинга')
             self.write_href_fin(href_list)
             print(f'Закрываю драйвер...')
             self.close_driver()
@@ -180,7 +183,8 @@ class P():
 
         print(f"Закончил парсить страницу")
         self.write_page()
-        self.run()
+        self.url = ''
+        return self.run()
 
     def close_driver(self):
         self.driver.close()
@@ -188,7 +192,6 @@ class P():
 
     def run(self):
         print(f'Процесс номер: {os.getpid()} страница: {self.read_page()}')
-        num_fail_get_page = 0
         while int(self.read_page()) < 2800:
             try:
                 if self.url != '':
@@ -200,6 +203,7 @@ class P():
                 continue
         print("Закончил все превсе...")
         return
+
 if __name__ == '__main__':
     pp = P()
     pp.run()
