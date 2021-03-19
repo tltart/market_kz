@@ -1,6 +1,6 @@
 from selenium import webdriver
 from random import choice
-import time
+import datetime
 
 
 class Parse_proxy():
@@ -26,7 +26,8 @@ class Parse_proxy():
         list_proxies = []
 
         try:
-            while True:
+            i = 0
+            while i < 3:
                 element = self.driver.find_elements_by_xpath(f'/html/body/div[1]/div[4]/div/div[4]/table/tbody/tr[{ip_addr}]/td[{ip_addr_2}]')[0].text
                 element_2 = self.driver.find_elements_by_xpath(f'/html/body/div[1]/div[4]/div/div[4]/table/tbody/tr[{port_addr}]/td[{port_addr_2}]')[0].text
                 speed = self.driver.find_elements_by_xpath(f'/html/body/div[1]/div[4]/div/div[4]/table/tbody/tr[{ip_addr}]/td[4]/div/p')[0].text
@@ -35,6 +36,7 @@ class Parse_proxy():
                     speed_socket = int(speed[0:4])
                     if speed_socket < 1500:
                         list_proxies.append(sock)
+                        i += 1
                     else:
                         pass
                 except Exception as e:
@@ -49,6 +51,7 @@ class Parse_proxy():
         print(list_proxies)
         if len(list_proxies) < 2:
             self.get_data()
+        list_proxies.insert(0, str(int(datetime.datetime.now().timestamp())))
         with open("proxyes.txt", "w") as file:
             for line in list_proxies:
                 file.write(line + '\n')

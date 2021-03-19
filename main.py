@@ -9,6 +9,7 @@ from random import choice
 import pandas as pd
 import time
 from multiprocessing import Process
+import datetime
 
 
 from parse_proxy import Parse_proxy
@@ -16,7 +17,7 @@ from parse_proxy import Parse_proxy
 class P():
     def __init__(self):
         self.proxy = None
-        self.proxy_choice = None
+        self.proxy_choice = ''
         self.user_agent = None
         self.user_agent_choice = None
         self.df = pd.DataFrame({'Object': [], 'Name': [], 'City': [], 'Phone': [], 'Price': [], 'href': []})
@@ -24,6 +25,7 @@ class P():
         self.capa["pageLoadStrategy"] = "none"
         self.url = ''
         self.false_parse = 0
+
 
     def read_page(self):
         page_ = open("page.txt", 'r')
@@ -56,18 +58,36 @@ class P():
         self.wait = WebDriverWait(self.driver, 5)
 
     def get_proxy(self):
-        self.proxy = open("proxyes.txt", 'r').read().split("\n")
-        self.proxy_choice = choice(self.proxy)
+        while self.proxy_choice == '':
+            self.proxy = open("proxyes.txt", 'r').read().split("\n")
+            if len(self.proxy) < 3:
+                if (int(self.proxy[0]) + 30) < int(datetime.datetime.now().timestamp()):
+                    self.reload_proxy_list(self.proxy)
+            try:
+                self.proxy = open("proxyes.txt", 'r').read().split("\n")
+                self.proxy.pop()
+                print(len(self.proxy))
+                self.proxy_choice = self.proxy[1]
+                self.proxy.remove(self.proxy_choice)
+                with open('proxyes.txt', 'w') as fp:
+                    for i in self.proxy:
+                        fp.write(i + '\n')
+                print(self.proxy_choice)
+            except Exception as e:
+                print("Не открывается файл с проксями...")
+                continue
+        print(self.proxy_choice)
         return self.proxy_choice
 
     def get_user_agent(self):
         self.user_agent = open("user_agent.txt", 'r').read().split("\n")
+        self.user_agent.pop()
         self.user_agent_choice = choice(self.user_agent)
         return self.user_agent_choice
 
     def write_csv(self, object, name, city, phone, price, href_i):
         self.df.loc[0] = [object, name, city, phone, price, href_i]
-        self.df.to_csv('data_4.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
+        self.df.to_csv('data_5.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
         return
 
     def get_url(self, url):
@@ -89,9 +109,73 @@ class P():
 
         except Exception as e:
             print("Не открылась ссылка...")
-            self.write_false_url(self.url)
+            self.check_page_in_fail_to_for_write(self.url)
+            self.driver.close()
+            return self.url
 
 
+    def check_page_in_fail_to_for_write(self, url):
+        sp = []
+        page_ = open("result.txt", 'r').read().split('\n')
+        for i in page_:
+            sp.append(i)
+        sp.pop()
+        if url in sp:
+            print("Не записываю URL он есть уже в листе")
+            return
+        print("Записываем URL в файл, его еще нет в листе")
+        self.write_false_url(url)
+        return
+
+    def check_href_in_page_fail(self, href_list):
+        sp = []
+        res = []
+        page_ = open("href_fin.txt", 'r').read().split('\n')
+
+        for i in page_:
+            z = i.replace('[', '').replace(']', '').replace('"', '').replace("'", '')
+            l = z.replace(' ', '').split(',')
+            for i in l:
+                sp.append(i)
+        for i in sp:
+            if i in href_list:
+                res.append(i)
+        if len(res) != 0:
+            self.write_href_fin(res)
+            return
+
+    def chek_fail_result_url_to_get(self):
+        page_ = open("result.txt", 'r').read().split('\n')
+        if len(page_) > 2:
+            page_.pop()
+            self.url = page_[0]
+            page_.pop(0)
+            with open('result.txt', 'w') as ff:
+                for i in page_:
+                    ff.write(str(i) + '\n')
+            return self.url
+        self.url = ''
+        return self.url
+
+    def reload_proxy_list(self, proxy):
+        try:
+            # proxy = open("proxyes.txt", 'r').read().split("\n")
+            if (int(proxy[0]) + 30) < datetime.datetime.now().timestamp():
+                self.do_new_proxies_list()
+
+            while len(proxy) < 3:
+                print(f'Процесс: {os.getpid()} ждет листа прокси')
+                proxy = open("proxyes.txt", 'r').read().split("\n")
+                print(len(proxy))
+
+        except Exception as e:
+            print("Не смог прочитать файл с прокси")
+            return
+        return
+    def do_new_proxies_list(self):
+        par_pr_instance = Parse_proxy()
+        par_pr_instance.run_parse_proxy()
+        return
 
 
     def get_page_from_site(self, url):
@@ -102,6 +186,7 @@ class P():
             print(self.url)
             try:
                 print("Жду открытия страницы...")
+                print(self.proxy_choice)
                 self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#goods > div:nth-child(1) > div > div.a-card__description > div.a-card__header > div.a-card__header-top > div.a-card__left-half > div.a-card__title > a")))
                 while fail_try_href < 6:
                     try:
@@ -119,12 +204,12 @@ class P():
                         print("Ошибка сбора ссылок, запишу в fail...")
                         self.write_false_url(self.url)
                         self.driver.close()
-                        return self.url
+                        return
                     except Exception as e:
                         if fail_try_href == 5:
                             print("Не смог собрать ссылки, запишу эту страницу в fail...")
                             self.write_false_url(self.url)
-                            return self.url
+                            return
                         pass
                     fail_try_href += 1
                     print(f'Не смог собрать ссылки {fail_try_href} раз')
@@ -132,15 +217,14 @@ class P():
             except Exception as e:
                 if fail_try == 5:
                     print("Страница на загрузилась, записываю в файл адрес страницы...")
-                    self.write_false_url(self.url)
+                    self.check_page_in_fail_to_for_write(self.url)
                     self.driver.close()
-                    return self.url
-
+                    return
                 fail_try += 1
                 print(f'Не дождался открытия страницы {fail_try} раз...')
                 continue
-        self.url = ''
-        return self.url
+
+        return
 
     def get_data_from_page(self, href_list):
         false_parse = 0
@@ -175,7 +259,7 @@ class P():
         if len(href_list) != 0 and false_parse == 5:
             print(f'Сделал {false_parse} попыток, закончил неудачно.')
             print(f'Записываю ссылки страниц для парсинга')
-            self.write_href_fin(href_list)
+            self.check_href_in_page_fail(href_list)
             print(f'Закрываю драйвер...')
             self.close_driver()
             time.sleep(2)
@@ -190,9 +274,17 @@ class P():
         self.driver.close()
         self.driver.quit()
 
+
+
     def run(self):
         print(f'Процесс номер: {os.getpid()} страница: {self.read_page()}')
         while int(self.read_page()) < 2800:
+            self.chek_fail_result_url_to_get()
+            self.proxy_choice = ''
+            try:
+                print(len(self.proxy))
+            except:
+                print("Еще нет списка прокси")
             try:
                 if self.url != '':
                     self.get_url(self.url)
@@ -206,14 +298,17 @@ class P():
 
 if __name__ == '__main__':
     pp = P()
-    pp.run()
+    # pp.run()
 
 
-    # procs = []
-    # for _ in range(5):
-    #     proc = Process(target=P().run, args=())
-    #     procs.append(proc)
-    #     proc.start()
+    procs = []
+    for _ in range(3):
+        proc = Process(target=P().run, args=())
+        procs.append(proc)
+        proc.start()
+
+    for _ in procs:
+        _.join()
 
 
 
