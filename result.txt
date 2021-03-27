@@ -1,1 +1,1 @@
-https://market.kz/nedvizhimost/?page=1696&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000
+https://market.kz/nedvizhimost/?page=2443&query%5Bdata%5D%5Bprice%5D%5Bfrom%5D=10000000

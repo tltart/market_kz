@@ -9,12 +9,14 @@ from random import choice
 import pandas as pd
 import time
 from multiprocessing import Process
+from threading import Thread
 import datetime
+from random import random
 
-
-from parse_proxy import Parse_proxy
+from market_kz.parse_proxy import Parse_proxy
 
 class P():
+
     def __init__(self):
         self.proxy = None
         self.proxy_choice = ''
@@ -58,15 +60,24 @@ class P():
         self.wait = WebDriverWait(self.driver, 5)
 
     def get_proxy(self):
+        tt = random()
+        self.proxy = open("proxyes.txt", 'r').read().split("\n")
         while self.proxy_choice == '':
-            self.proxy = open("proxyes.txt", 'r').read().split("\n")
-            if len(self.proxy) < 3:
-                if (int(self.proxy[0]) + 30) < int(datetime.datetime.now().timestamp()):
-                    self.reload_proxy_list(self.proxy)
+            if len(self.proxy) < 3 and (int(self.proxy[0]) + 30) < int(datetime.datetime.now().timestamp()):
+                print(f'Процесс {os.getpid()} начал добывать прокси')
+                with open("proxyes.txt", "w") as file:
+                    file.write(str(int(datetime.datetime.now().timestamp())))
+                    file.close()
+                self.reload_proxy_list(self.proxy)
+            else:
+                while len(self.proxy) < 2:
+                    print(f'процесс {os.getpid()} начал ожидать прокси лист')
+                    time.sleep(10)
+                    self.proxy = open("proxyes.txt", 'r').read().split("\n")
             try:
-                self.proxy = open("proxyes.txt", 'r').read().split("\n")
+                # self.proxy = open("proxyes.txt", 'r').read().split("\n")
                 self.proxy.pop()
-                print(len(self.proxy))
+                print(f'Длина прокси листа: {len(self.proxy)}')
                 self.proxy_choice = self.proxy[1]
                 self.proxy.remove(self.proxy_choice)
                 with open('proxyes.txt', 'w') as fp:
@@ -74,7 +85,7 @@ class P():
                         fp.write(i + '\n')
                 print(self.proxy_choice)
             except Exception as e:
-                print("Не открывается файл с проксями...")
+                print(f'Процесс {os.getpid()}: не открывается файл с проксями...')
                 continue
         print(self.proxy_choice)
         return self.proxy_choice
@@ -87,7 +98,7 @@ class P():
 
     def write_csv(self, object, name, city, phone, price, href_i):
         self.df.loc[0] = [object, name, city, phone, price, href_i]
-        self.df.to_csv('data_5.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
+        self.df.to_csv('data_13.csv', mode='a', encoding='utf-8', header=False, index=False, sep=";")
         return
 
     def get_url(self, url):
@@ -159,18 +170,18 @@ class P():
 
     def reload_proxy_list(self, proxy):
         try:
-            # proxy = open("proxyes.txt", 'r').read().split("\n")
-            if (int(proxy[0]) + 30) < datetime.datetime.now().timestamp():
-                self.do_new_proxies_list()
+            self.do_new_proxies_list()
+            return
 
-            while len(proxy) < 3:
+            while len(proxy) < 6:
                 print(f'Процесс: {os.getpid()} ждет листа прокси')
                 proxy = open("proxyes.txt", 'r').read().split("\n")
-                print(len(proxy))
+                print(f'У процесса {os.getpid()} длина прокси листа: {len(proxy)}')
 
         except Exception as e:
             print("Не смог прочитать файл с прокси")
             return
+        print('Просто возвращаюсь из функии reload_proxy_list')
         return
     def do_new_proxies_list(self):
         par_pr_instance = Parse_proxy()
@@ -272,12 +283,14 @@ class P():
 
     def close_driver(self):
         self.driver.close()
+        time.sleep(10)
         self.driver.quit()
+        time.sleep(10)
 
 
 
     def run(self):
-        print(f'Процесс номер: {os.getpid()} страница: {self.read_page()}')
+        # print(f'Процесс номер: {os.getpid()} страница: {self.read_page()}')
         while int(self.read_page()) < 2800:
             self.chek_fail_result_url_to_get()
             self.proxy_choice = ''
@@ -297,14 +310,15 @@ class P():
         return
 
 if __name__ == '__main__':
-    pp = P()
+    # pp = P()
     # pp.run()
 
 
     procs = []
-    for _ in range(3):
+    for _ in range(os.cpu_count()):
         proc = Process(target=P().run, args=())
         procs.append(proc)
+        time.sleep(random())
         proc.start()
 
     for _ in procs:
